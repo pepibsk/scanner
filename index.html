@@ -7,31 +7,37 @@
 </head>
 <body>
     <h1>QR Code Scanner and CSV Search</h1>
-    <video id="preview" style="width: 300px;"></video>
+    <video id="preview" style="width: 300px; border: 1px solid black;"></video>
     <p id="result">Scan a QR code to see the result.</p>
     <input type="file" id="csvFile" accept=".csv">
     <div id="csvResult"></div>
 
     <script src="https://unpkg.com/instascan@1.0.0/build/instascan.min.js"></script>
     <script>
-        // Step 2: QR Code Scanner Setup
+        // Debug: Log when the script starts running
+        console.log('Script loaded');
+
         let scanner = new Instascan.Scanner({ video: document.getElementById('preview') });
         scanner.addListener('scan', function (content) {
             document.getElementById('result').textContent = `QR Code Content: ${content}`;
+            console.log('QR code content:', content);
             searchCSV(content);
         });
         
         Instascan.Camera.getCameras().then(function (cameras) {
+            console.log('Cameras found:', cameras.length);
             if (cameras.length > 0) {
                 scanner.start(cameras[0]);
+                console.log('Camera started');
             } else {
                 console.error('No cameras found.');
+                document.getElementById('result').textContent = 'No cameras found.';
             }
         }).catch(function (e) {
             console.error(e);
+            document.getElementById('result').textContent = 'Error accessing camera: ' + e;
         });
 
-        // Step 3: Load and Search the CSV File
         document.getElementById('csvFile').addEventListener('change', function (e) {
             let file = e.target.files[0];
             let reader = new FileReader();
@@ -39,6 +45,7 @@
             reader.onload = function (event) {
                 let csvData = event.target.result;
                 window.csvDataArray = csvData.split('\n').map(row => row.split(','));
+                console.log('CSV data loaded');
             };
             
             reader.readAsText(file);
