@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Scanner and CSV Search</title>
+</head>
+<body>
+    <h1>QR Code Scanner and CSV Search</h1>
+    <video id="preview" style="width: 300px;"></video>
+    <p id="result">Scan a QR code to see the result.</p>
+    <input type="file" id="csvFile" accept=".csv">
+    <div id="csvResult"></div>
+
+    <script src="https://unpkg.com/instascan@1.0.0/build/instascan.min.js"></script>
+    <script>
+        // Step 2: QR Code Scanner Setup
+        let scanner = new Instascan.Scanner({ video: document.getElementById('preview') });
+        scanner.addListener('scan', function (content) {
+            document.getElementById('result').textContent = `QR Code Content: ${content}`;
+            searchCSV(content);
+        });
+        
+        Instascan.Camera.getCameras().then(function (cameras) {
+            if (cameras.length > 0) {
+                scanner.start(cameras[0]);
+            } else {
+                console.error('No cameras found.');
+            }
+        }).catch(function (e) {
+            console.error(e);
+        });
+
+        // Step 3: Load and Search the CSV File
+        document.getElementById('csvFile').addEventListener('change', function (e) {
+            let file = e.target.files[0];
+            let reader = new FileReader();
+            
+            reader.onload = function (event) {
+                let csvData = event.target.result;
+                window.csvDataArray = csvData.split('\n').map(row => row.split(','));
+            };
+            
+            reader.readAsText(file);
+        });
+
+        function searchCSV(content) {
+            let resultDiv = document.getElementById('csvResult');
+            resultDiv.innerHTML = '';
+            
+            if (window.csvDataArray) {
+                let found = false;
+                window.csvDataArray.forEach(row => {
+                    if (row.includes(content)) {
+                        resultDiv.innerHTML += `<p>Found: ${row.join(', ')}</p>`;
+                        found = true;
+                    }
+                });
+                if (!found) {
+                    resultDiv.innerHTML = '<p>No matching record found in the CSV.</p>';
+                }
+            } else {
+                resultDiv.innerHTML = '<p>Please upload a CSV file first.</p>';
+            }
+        }
+    </script>
+</body>
+</html>
